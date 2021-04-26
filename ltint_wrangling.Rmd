@@ -1,0 +1,46 @@
+---
+title: "ltint_gdp"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library (tidyverse)
+```
+
+## Data cleaning
+
+Uploading data
+```{r, message=FALSE, warning=FALSE}
+total <- read_csv("data/LTINT_GDP.csv")
+df_gdp <- read_csv("data/GDP_yearly.csv")
+df_ltint <- read_csv("data/LTINT_yearly.csv")
+```
+
+Making data wide
+```{r}
+df_ltint_wide <- df_ltint %>% pivot_wider(names_from = INDICATOR, values_from = Value)
+```
+
+Using MEASURE variable as the pivot to make it wide (names_from = MEASURE) because there were two different measures of GDP (million USD and per capita)
+Then dropping the INDICATOR variable that had GDP as values
+```{r}
+df_gdp_wide <- df_gdp %>% 
+  pivot_wider(names_from = MEASURE, values_from = Value, names_prefix = "GDP_") %>% 
+  select(-INDICATOR)
+```
+
+Merging GDP and long term interest rates in one dataframe
+```{r}
+df_merged <- df_gdp_wide %>% left_join(df_ltint_wide %>% select(LOCATION, TIME, LTINT), by = c("LOCATION","TIME"))
+```
+
+
+Dataset from 2006 (date where long term interest rates data starts)
+```{r}
+df_merged_2006_2020 <- df_merged %>% filter(TIME>=2006)
+df_merged_2006_2020 %>% write_csv("gdp_ltint_2006_2020.csv")
+```
+
+
+
