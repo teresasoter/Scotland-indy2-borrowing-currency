@@ -20,3 +20,6 @@ df_merged <- df_gdp_wide %>% left_join(df_ltint_wide %>% select(LOCATION, TIME, 
 #dataset from 2006 (date where ltint starts)
 df_merged_2006_2020 <- df_merged %>% filter(TIME>=2006)
 df_merged_2006_2020 %>% write_csv("gdp_ltint_2006_2020.csv")
+
+
+

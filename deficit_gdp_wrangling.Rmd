@@ -46,24 +46,31 @@ Creating rolling averages over 5, 7 and 10 years
 ```
 Visualising 5 year rolling averages of balance as % of GDP for all countries 
 ```{r} 
-    p <- df_deficit_pct %>%
+    p1 <- df_deficit_pct %>%
     ggplot(aes(TIME, bal_05ya, colour=LOCATION)) + 
     geom_line()
-    ggplotly(p) 
+    ggplotly(p1)
 ```
 Visualising 7 year rolling averages of balance as % of GDP for all countries
 ```{r}
-    p <- df_deficit_pct %>%
+    p2 <- df_deficit_pct %>%
     ggplot(aes(TIME, bal_07ya, colour=LOCATION)) + 
     geom_line()
-    ggplotly(p)
+    ggplotly(p2)
 ```
 Visualising 10 year rolling averages of balance as % of GDP for all countries
 ```{r} 
-    p <- df_deficit_pct %>%
+    p3 <- df_deficit_pct %>%
     ggplot(aes(TIME, bal_10ya, colour=LOCATION)) + 
     geom_line()
-    ggplotly(p) 
+    ggplotly(p3) 
 ```
 
-
+Visualising 7 year rolling averages of balance as % of GDP for all countries from 2000
+```{r}
+    p4 <- df_deficit_pct %>%
+    filter(TIME>=2000) %>% 
+    ggplot(aes(TIME, bal_07ya, colour=LOCATION)) + 
+    geom_line()
+    ggplotly(p4)
+```
