@@ -1,5 +1,5 @@
 ---
-title: "ltint_gdp"
+title: "Long term interest rates - GDP - debt-to-GDP ratio"
 output: html_document
 ---
 
@@ -89,6 +89,7 @@ setdiff(countries_gdp, countries_ltint)
 df_merged_2006_2020 %>% summary(debt_gdp)
 median_debt <- median(df_merged_2006_2020$debt_gdp, na.rm=T)
 ```
+## Data exploring
 
 Visualising the relationship between GDP and long term interest rates in 2019 (debt-to-gdp ratio data for 2020 is very patchy)
 Colour of the dot corresponds to whether the country is above or below the median debt-to-gdp ratio in 2019

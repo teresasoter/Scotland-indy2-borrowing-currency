@@ -74,3 +74,11 @@ Visualising 7 year rolling averages of balance as % of GDP for all countries fro
     geom_line()
     ggplotly(p4)
 ```
+Visualising 7 year rolling averages of deficit % of GDP for all countries(higher values mean higher deficit)
+```{r}
+    p4 <- df_deficit_pct %>%
+    ggplot(aes(TIME, -bal_07ya, colour=LOCATION)) + 
+    geom_line()
+    ggplotly(p4)
+```
+
