@@ -9,7 +9,9 @@ library (tidyverse)
 library (plotly)
 library(zoo) # moving averages 
 ```
-Note that positive values in deficit_pc mean budget surpluses and negative deficits
+
+## Preparing data
+
 Uploading data 
 ```{r reading, message=FALSE}
 df_deficit_pct <- read_csv("data/deficit_pct_gdp_OECD.csv")
@@ -26,15 +28,13 @@ df_wide_deficit <- df_deficit_pct %>%
   select(-`Flag Codes`) %>% #this removes the variable Flag Codes to make the wide dataset cleaner
   pivot_wider(names_from = TIME, values_from = deficit_pc)
 ```
-Visualising balance as % of GDP for all countries over the years (positive values are surpluses, negative values are deficits)
-```{r}
-  p <- df_deficit_pct %>% #making p into a ggplot object to visualise w/ plotly
- # line below would invert surplus/deficit in deficit_pc, making higher values mean higher deficits
- # mutate(deficit_pc=-deficit_pc) %>% 
-  ggplot(aes(TIME, deficit_pc, colour=LOCATION)) + 
-  geom_line()
-  ggplotly(p) #plotly lets me see the legend when scrolling through the plot
+Creating a comparators variable
+```{r} 
+comparators <- c("DNK","IRL","NZL","NOR","SWE")
+    df_deficit_pct <- df_deficit_pct %>%
+    mutate(in_comparators=if_else(LOCATION%in%comparators,TRUE,FALSE)) 
 ```
+
 Creating rolling averages over 5, 7 and 10 years
 ```{r}
   df_deficit_pct <- df_deficit_pct %>% #this function uses longform
@@ -44,41 +44,86 @@ Creating rolling averages over 5, 7 and 10 years
          bal_10ya = rollmean(deficit_pc, k = 10, fill = NA)) %>% 
         ungroup() #this closes that group_by(LOCATION)
 ```
+
+*deficit_pc and its rolling average recodings: Positive values mean budget surpluses and negative deficits*
+
+## Exploring data
+
+### Plot 1
+Visualising balance as % of GDP for all countries over the years (positive values are surpluses, negative values are deficits)
+```{r}
+  p1 <- df_deficit_pct %>% #making p into a ggplot object to visualise w/ plotly
+ # line below would invert surplus/deficit in deficit_pc, making higher values mean higher deficits
+ # mutate(deficit_pc=-deficit_pc) %>% 
+  ggplot(aes(TIME, deficit_pc, colour=LOCATION)) + 
+  geom_line()
+  ggplotly(p1) #plotly lets me see the legend when scrolling through the plot
+```
+
+### Plot 2
 Visualising 5 year rolling averages of balance as % of GDP for all countries 
 ```{r} 
-    p1 <- df_deficit_pct %>%
-    ggplot(aes(TIME, bal_05ya, colour=LOCATION)) + 
-    geom_line()
-    ggplotly(p1)
-```
-Visualising 7 year rolling averages of balance as % of GDP for all countries
-```{r}
     p2 <- df_deficit_pct %>%
-    ggplot(aes(TIME, bal_07ya, colour=LOCATION)) + 
+    ggplot(aes(TIME, bal_05ya, colour=LOCATION)) + 
     geom_line()
     ggplotly(p2)
 ```
-Visualising 10 year rolling averages of balance as % of GDP for all countries
-```{r} 
+
+### Plot 3
+Visualising 7 year rolling averages of balance as % of GDP for all countries
+```{r}
     p3 <- df_deficit_pct %>%
-    ggplot(aes(TIME, bal_10ya, colour=LOCATION)) + 
+    ggplot(aes(TIME, bal_07ya, colour=LOCATION)) + 
     geom_line()
-    ggplotly(p3) 
+    ggplotly(p3)
 ```
 
+### Plot 4
+Visualising 10 year rolling averages of balance as % of GDP for all countries
+```{r} 
+    p4 <- df_deficit_pct %>%
+    ggplot(aes(TIME, bal_10ya, colour=LOCATION)) + 
+    geom_line()
+    ggplotly(p4) 
+```
+
+
+###Plot 5
 Visualising 7 year rolling averages of balance as % of GDP for all countries from 2000
 ```{r}
-    p4 <- df_deficit_pct %>%
+    p5 <- df_deficit_pct %>%
     filter(TIME>=2000) %>% 
     ggplot(aes(TIME, bal_07ya, colour=LOCATION)) + 
     geom_line()
-    ggplotly(p4)
-```
-Visualising 7 year rolling averages of deficit % of GDP for all countries(higher values mean higher deficit)
-```{r}
-    p4 <- df_deficit_pct %>%
-    ggplot(aes(TIME, -bal_07ya, colour=LOCATION)) + 
-    geom_line()
-    ggplotly(p4)
+    ggplotly(p5)
 ```
 
+
+###Plot 6
+Visualising 7 year rolling averages of deficit % of GDP for all countries(higher values mean higher deficit)
+```{r}
+    p6 <- df_deficit_pct %>%
+    ggplot(aes(TIME, -bal_07ya, colour=LOCATION)) + 
+    geom_line()
+    ggplotly(p6)
+```
+
+
+###Plot 7
+Visualising 7 year rolling averages of deficit % of GDP for all countries(higher values mean higher deficit) with highlighted comparators
+```{r}
+    p7 <- df_deficit_pct %>%
+    ggplot(aes(TIME, -bal_07ya, colour=in_comparators, group=LOCATION)) + 
+    geom_line()
+    ggplotly(p7)
+```
+
+
+### Plot 8
+Visualising deficit as % of GDP for all countries(higher values mean higher deficit) with highlighted comparators
+```{r}
+    p8 <- df_deficit_pct %>%
+    ggplot(aes(TIME, -deficit_pc, colour=in_comparators, group=LOCATION)) + 
+    geom_line()
+    ggplotly(p8)
+```

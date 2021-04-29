@@ -40,7 +40,6 @@ Merging GDP and long term interest rates in one dataframe
 df_merged <- df_gdp_wide %>% left_join(df_ltint_wide %>% select(LOCATION, TIME, LTINT), by = c("LOCATION","TIME"))
 ```
 
-
 ```{r}
 df_debt_ratio <- read_csv("data/debt_gdp_ratio_oecd.csv")
 
@@ -89,47 +88,6 @@ setdiff(countries_gdp, countries_ltint)
 df_merged_2006_2020 %>% summary(debt_gdp)
 median_debt <- median(df_merged_2006_2020$debt_gdp, na.rm=T)
 ```
-## Data exploring
-
-Visualising the relationship between GDP and long term interest rates in 2019 (debt-to-gdp ratio data for 2020 is very patchy)
-Colour of the dot corresponds to whether the country is above or below the median debt-to-gdp ratio in 2019
-```{r}
-median_debt_2019 <- df_merged_2006_2020 %>% 
-  filter(TIME==2019, LOCATION!="EU27_2020", LOCATION!="OECDE", LOCATION!="EA19") %>% 
-  pull(debt_gdp) %>% median(na.rm=T)
-
-
-```    
-
-Scatterplot 
-```{r}
-p1 <- df_merged_2006_2020 %>% 
-    filter(TIME==2019, LOCATION!="EU27_2020", LOCATION!="OECDE", LOCATION!="EA19") %>% 
-    mutate(above_debt_median=if_else(debt_gdp>=median_debt_2019,TRUE,FALSE)) %>% 
-    ggplot(aes(LTINT, GDP_MLN_USD, colour=above_debt_median, group=LOCATION)) + 
-    geom_point()
-ggplotly(p1) 
-```    
-
-Visualising the relationship between GDP and long term interest rates in 2013
-Colour of the dot corresponds to whether the country is above or below the median debt-to-gdp ratio in 2013
-```{r}
-median_debt_2013 <- df_merged_2006_2020 %>% 
-  filter(TIME==2013, LOCATION!="EU27_2020", LOCATION!="OECDE", LOCATION!="EA19") %>% 
-  pull(debt_gdp) %>% median(na.rm=T)
-
-
-```    
-
-Scatterplot
-```{r}
-p2 <- df_merged_2006_2020 %>% 
-    filter(TIME==2013, LOCATION!="EU27_2020", LOCATION!="OECDE", LOCATION!="EA19") %>% 
-    mutate(above_debt_median=if_else(debt_gdp>=median_debt_2013,TRUE,FALSE)) %>% 
-    ggplot(aes(LTINT, GDP_MLN_USD, colour=above_debt_median, group=LOCATION)) + 
-    geom_point()
-ggplotly(p2) 
-```    
 
 Creating a eurozone countries variable
 ```{r}
@@ -141,6 +99,54 @@ median_debt_euro_2019 <- df_merged_2006_2020 %>%
 
 ```  
 
+## Data exploring
+
+*Debt-to-gdp ratio data for 2020 is very patchy so 2019 will be used as the most recent data point*
+
+### Plot 1
+
+Visualising the relationship between GDP and long term interest rates in 2019 
+Colour of the dot corresponds to whether the country is above or below the median debt-to-gdp ratio in 2019
+```{r}
+median_debt_2019 <- df_merged_2006_2020 %>% 
+  filter(TIME==2019, LOCATION!="EU27_2020", LOCATION!="OECDE", LOCATION!="EA19") %>% 
+  pull(debt_gdp) %>% median(na.rm=T)
+
+
+```    
+
+```{r}
+p1 <- df_merged_2006_2020 %>% 
+    filter(TIME==2019, LOCATION!="EU27_2020", LOCATION!="OECDE", LOCATION!="EA19") %>% 
+    mutate(above_debt_median=if_else(debt_gdp>=median_debt_2019,TRUE,FALSE)) %>% 
+    ggplot(aes(LTINT, GDP_MLN_USD, colour=above_debt_median, group=LOCATION)) + 
+    geom_point()
+ggplotly(p1) 
+```    
+
+Visualising the relationship between GDP and long term interest rates in 2013
+```{r}
+median_debt_2013 <- df_merged_2006_2020 %>% 
+  filter(TIME==2013, LOCATION!="EU27_2020", LOCATION!="OECDE", LOCATION!="EA19") %>% 
+  pull(debt_gdp) %>% median(na.rm=T)
+
+
+```    
+
+### Plot 2
+
+Scatterplot - Colour of the dot corresponds to whether the country is above or below the median debt-to-gdp ratio in 2013
+```{r}
+p2 <- df_merged_2006_2020 %>% 
+    filter(TIME==2013, LOCATION!="EU27_2020", LOCATION!="OECDE", LOCATION!="EA19") %>% 
+    mutate(above_debt_median=if_else(debt_gdp>=median_debt_2013,TRUE,FALSE)) %>% 
+    ggplot(aes(LTINT, GDP_MLN_USD, colour=above_debt_median, group=LOCATION)) + 
+    geom_point()
+ggplotly(p2) 
+```    
+
+### Plot 3
+
 Visualising long term interest rates and GDP relationship, colour-coded by above or below median of eurozone debt-to-gdp ratio
 ```{r}
 p3 <- df_merged_2006_2020 %>% 
@@ -151,6 +157,8 @@ p3 <- df_merged_2006_2020 %>%
 ggplotly(p3) 
 ```    
 
+### Plot 4
+
 Visualising long term interest rates and debt-to-gdp ratio relationship in eurozone
 ```{r}
 p4 <- df_merged_2006_2020 %>% 
@@ -159,3 +167,29 @@ p4 <- df_merged_2006_2020 %>%
     geom_point()
 ggplotly(p4) 
 ```    
+
+### Plot 5
+
+Visualising GDP and debt-to-gdp ratio relationship in eurozone to choose a good comparator (similar debt-to-gdp ratio but different sizes)
+```{r}
+p5 <- df_merged_2006_2020 %>% 
+    filter(TIME==2019, LOCATION %in% eurozone) %>% 
+    ggplot(aes(GDP_MLN_USD, debt_gdp, colour=LOCATION)) + 
+    geom_point()
+ggplotly(p5) 
+```    
+
+
+## Thoughts
+
+* We will probably have to use 2019 as the most recent data point throughout because debt-to-gdp data for 2020 is patchy here. 
+* We can also do analysis for 2020 with the other variables. 
+* We can do everything just for the eurozone to eliminate noise and the effect of the US as an outlier but we might also choose to do EU (including non-eurozone) and UK to get a bit more info but also eliminate less noise
+* Would be good to decide whether the UK always being there is necessary, I think it would probably be good. 
+* I used the median as the comparison point for debt-to-gdp ratio but we might want to choose something else. 
+* 2013 does not look that different from 2019 from what I can tell. 
+
+### Comparators
+
+* Option 1: Theory-driven comparators. SGC used New Zealand, 
+* Option 2: Countries that have similar debt-to-gdp ratios but very different GDPs, to see how they compare in terms of long term interest rates. Countries with similar debt-to-gdp ratios to Germany might make for good comparators with very different GDPs. Maybe the Netherlands, Finland, Ireland, Slovakia. See plot 5.
