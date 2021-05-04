@@ -88,7 +88,7 @@ Visualising 10 year rolling averages of balance as % of GDP for all countries
 ```
 
 
-###Plot 5
+### Plot 5
 Visualising 7 year rolling averages of balance as % of GDP for all countries from 2000
 ```{r}
     p5 <- df_deficit_pct %>%
@@ -99,8 +99,9 @@ Visualising 7 year rolling averages of balance as % of GDP for all countries fro
 ```
 
 
-###Plot 6
-Visualising 7 year rolling averages of deficit % of GDP for all countries(higher values mean higher deficit)
+### Plot 6
+Visualising 7 year rolling averages of deficit % of GDP for all countries 
+*higher values mean higher deficit*
 ```{r}
     p6 <- df_deficit_pct %>%
     ggplot(aes(TIME, -bal_07ya, colour=LOCATION)) + 
@@ -110,7 +111,8 @@ Visualising 7 year rolling averages of deficit % of GDP for all countries(higher
 
 
 ###Plot 7
-Visualising 7 year rolling averages of deficit % of GDP for all countries(higher values mean higher deficit) with highlighted comparators
+Visualising 7 year rolling averages of deficit % of GDP for all countries with highlighted comparators
+*higher values mean higher deficit*
 ```{r}
     p7 <- df_deficit_pct %>%
     ggplot(aes(TIME, -bal_07ya, colour=in_comparators, group=LOCATION)) + 
@@ -120,10 +122,23 @@ Visualising 7 year rolling averages of deficit % of GDP for all countries(higher
 
 
 ### Plot 8
-Visualising deficit as % of GDP for all countries(higher values mean higher deficit) with highlighted comparators
+Visualising deficit as % of GDP for all countries with highlighted comparators
+*higher values mean higher deficit*
 ```{r}
     p8 <- df_deficit_pct %>%
     ggplot(aes(TIME, -deficit_pc, colour=in_comparators, group=LOCATION)) + 
     geom_line()
     ggplotly(p8)
 ```
+
+## Thoughts
+
+* Using the whole timeline gives us Finland during its economic crisis which might be interesting for the point that countries borrow more during crises
+* The shorter timeline (starting at around 2000) would be more parsimonious
+* We can choose between 5, 7 or 10 rolling averages. I think 7 might be the fairer picture. 
+* Rolling averages make us lose data points for the more recent years where it can't be calculated like that. It would be good to think about whether that's a tradeoff that we're happy with. 
+* General story seems to be that no one has run the kind of deficit that Scotland might be looking at consistently and particularly not outside of crisis periods. 
+* Interesting that Norway is the country Scotland is most often compared with and it's a total outlier in terms of running surpluses.
+* Ireland, another potential comparison, is on the other end of that. 
+* This group of comparators I chose ("DNK","IRL","NZL","NOR","SWE") might not be the best one, I picked them because they're some of the comparators that come up more often. Might make more sense to stick to the countries that the Sustainable Growth Commission uses as their case studies. 
+* I think the best way to visualise this in the actual paper would probably be this kind of chart (obviously with very different formatting and less crowded) or if we want to just stick to the comparators we could do are bar charts (the ones that have the change graph at their tip)

@@ -166,6 +166,7 @@ p4 <- df_merged_2006_2020 %>%
     ggplot(aes(LTINT, debt_gdp, colour=LOCATION)) + 
     geom_point()
 ggplotly(p4) 
+
 ```    
 
 ### Plot 5
@@ -188,6 +189,7 @@ ggplotly(p5)
 * Would be good to decide whether the UK always being there is necessary, I think it would probably be good. 
 * I used the median as the comparison point for debt-to-gdp ratio but we might want to choose something else. 
 * 2013 does not look that different from 2019 from what I can tell. 
+* To visualise I can't think of much else beyond scatterplots, need to pick whether independent variable we care most about is debt-to-gdp ratio or GDP (or both). Could do two different plots, could do debt-to-gdpXlong term interest rates with GDP as size of the dots. 
 
 ### Comparators
 
