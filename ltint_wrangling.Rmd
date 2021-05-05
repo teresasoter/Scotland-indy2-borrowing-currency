@@ -66,6 +66,12 @@ df_merged <- df_gdp_wide %>%
 df_merged
 ```
 
+Creating a natural log of GDP variable
+```{r}
+df_merged <- df_merged %>%
+  mutate(ln_gdp = log(GDP_MLN_USD)) 
+``` 
+
 Creating dataset from 2006 (date where long term interest rates data starts)
 ```{r}
 df_merged_2006_2020 <- df_merged %>% filter(TIME>=2006)
@@ -92,12 +98,20 @@ median_debt <- median(df_merged_2006_2020$debt_gdp, na.rm=T)
 Creating a eurozone countries variable
 ```{r}
 eurozone <- c("AUT","BEL","CYP","EST","FIN","FRA","DEU","GRC","IRL","ITA","LVA","LTU","LUX","MLT","NLD","PRT","SVK","SVN","ESP")
+```
 
+Creating and above-below variable for median of debt-to-gdp in 2013
+```{r}
 median_debt_euro_2019 <- df_merged_2006_2020 %>% 
   filter(TIME==2013, LOCATION %in% eurozone) %>% 
   pull(debt_gdp) %>% median(na.rm=T)
 
-```  
+```
+
+Creating a comparators variable for those with similar debt-to-gdp ratios
+```{r}
+comp_debt_gdp <- c("BEL","FRA","DEU","IRL","LUX","MLT","NLD","SVK","ESP")
+```
 
 ## Data exploring
 
@@ -195,3 +209,39 @@ ggplotly(p5)
 
 * Option 1: Theory-driven comparators. SGC used New Zealand, 
 * Option 2: Countries that have similar debt-to-gdp ratios but very different GDPs, to see how they compare in terms of long term interest rates. Countries with similar debt-to-gdp ratios to Germany might make for good comparators with very different GDPs. Maybe the Netherlands, Finland, Ireland, Slovakia. See plot 5.
+
+### Plot 6
+
+Same as plot 3 but with natural log of GDP
+Visualising long term interest rates and natural log of GDP relationship, colour-coded by above or below median of eurozone debt-to-gdp ratio
+```{r}
+p6 <- df_merged_2006_2020 %>% 
+    filter(TIME==2019, LOCATION %in% eurozone) %>% 
+    mutate(above_debt_median=if_else(debt_gdp>=median_debt_euro_2019,TRUE,FALSE)) %>% 
+    ggplot(aes(LTINT, ln_gdp, colour=above_debt_median, group=LOCATION)) + 
+    geom_point()
+ggplotly(p6) 
+```    
+
+### Plot 7
+
+Visualising relationship between debt-to-GDP ratio and long term interest rates with size of bubbles representing the natural log of GDP
+```{r}
+p7 <- df_merged_2006_2020 %>% 
+    filter(TIME==2019, LOCATION %in% eurozone) %>% 
+    ggplot(aes(x = LTINT, y = debt_gdp, size = ln_gdp,    colour=LOCATION)) + 
+    geom_point(alpha=0.7)
+ggplotly(p7) 
+```    
+
+
+### Plot 8
+
+Visualising relationship between natural log of GDP and long term interest rates only using countries with similar debt-to-GDP ratios
+```{r}
+p8 <- df_merged_2006_2020 %>% 
+    filter(TIME==2019, LOCATION %in% comp_debt_gdp) %>% 
+    ggplot(aes(x = LTINT, y = ln_gdp, colour=LOCATION)) + 
+    geom_point(alpha=0.7)
+ggplotly(p8) 
+```    
