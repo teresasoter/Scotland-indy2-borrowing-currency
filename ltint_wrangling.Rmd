@@ -245,3 +245,14 @@ p8 <- df_merged_2006_2020 %>%
     geom_point(alpha=0.7)
 ggplotly(p8) 
 ```    
+
+### Plot 9
+
+Visualising relationship between debt-to-GDP ratio and long term interest rates with size of bubbles representing GDP (not logged)
+```{r}
+p9 <- df_merged_2006_2020 %>% 
+    filter(TIME==2019, LOCATION %in% eurozone) %>% 
+    ggplot(aes(x = LTINT, y = debt_gdp, size = GDP_MLN_USD, colour=LOCATION)) + 
+    geom_point(alpha=0.7)
+ggplotly(p9) 
+```    
