@@ -70,17 +70,23 @@ df_deficit_pct <- df_deficit_pct %>% #this function uses longform
   ungroup ()
 ```
 
+```{r}
+df_deficit_no_GFC <- df_deficit_pct %>%
+  filter(!(TIME%in%c(2009,2010,2011,2012,2013)))
+```
+
 Creating rolling minimums over 3 and 5 years
 This is the minimum deficit in rolling 5 year periods excluding GFC
 ```{r}
-df_deficit_pct <- df_deficit_pct %>% #this function uses longform
+df_deficit_no_GFC <- df_deficit_no_GFC %>%
   group_by(LOCATION) %>% 
-  filter(TIME != 2009 | TIME != 2010 | TIME != 2011 | TIME != 2012 | TIME != 2013) %>%
   mutate(min_05y_no_GFC = rollapply(deficit_pc,5,min, fill=NA, align = "right"),
          min_03y_no_GFC = rollapply(deficit_pc,3,min, fill=NA, align = "right")
          ) %>% 
   ungroup ()
 ```
+
+*Convoluted attempt at creating maximum values*
 
 Creating maximum values of 5-rolling minimum deficits
 ```{r}
@@ -89,20 +95,33 @@ max_min_5 <- df_deficit_pct %>%
   summarise(max_5 = max(min_05y, na.rm=TRUE))
 ```
 
-Creating maximum values of 5-rolling minimums without GFC years but using rolling minimum levels that included GFC years when calculated
+*Convoluted attempt at creating maximum values*
+
+Creating maximum values of 5-rolling minimums without GFC years
 ```{r}
-max_min_5_no_GFC <- df_deficit_pct %>% 
+max_min_5_no_GFC <- df_deficit_no_GFC %>% 
   group_by(LOCATION) %>%
-  filter(TIME != 2009 | TIME != 2010 | TIME != 2011 | TIME != 2012 | TIME != 2013) %>% 
-  summarise(max_5_GFC = max(min_05y, na.rm=TRUE))
+  summarise(max_5_GFC = max(min_05y_no_GFC, na.rm=TRUE))
 ```
 
-Creating maximum values of 5-rolling minimums without GFC years using rolling minimum levels that did not take the GFC years into account when calculated
+Creating maximum values of 5-rolling minimums without GFC years and keeping the information of all the other variables
 ```{r}
-max_min_5_no_GFC_2 <- df_deficit_pct %>% 
-  group_by(LOCATION) %>%
-  summarise(max_5_GFC_2 = max(min_05y_no_GFC, na.rm=TRUE))
+max_5ymin <- df_deficit_no_GFC %>% 
+  group_by(LOCATION) %>% 
+  arrange(desc(min_05y_no_GFC)) %>% 
+  slice(1) %>% 
+  ungroup()
 ```
+
+Creating maximum values of 5-rolling average without GFC years
+```{r}
+max_5ya <- df_deficit_no_GFC %>% 
+  group_by(LOCATION) %>% 
+  arrange(desc(bal_05ya)) %>% 
+  slice(1) %>% 
+  ungroup()
+```
+
 ## Exploring data
 
 *deficit_pc and its rolling average recodings: Positive values mean budget deficits and negative values mean budget surpluses*
@@ -215,23 +234,33 @@ The highest minimum deficit including the financial crisis was Greece (9%)
 ```
 
 ### Plot 10
-Visualising maximum minimum deficits over 5 years *excluding GFC years* (I haven't figured out a way to keep the year information yet)
+Visualising maximum minimum deficits over 5 years *excluding GFC years*
 
-The rolling minimum was calculated *including* the GFC years
+The rolling minimum was calculated *excluding* the GFC years
 ```{r}
-    p10 <- max_min_5_no_GFC %>%
-    ggplot(aes(LOCATION,max_5_GFC)) + 
+    p10 <- max_5ymin %>%
+    ggplot(aes(LOCATION,min_05y_no_GFC,group=TIME)) + 
     geom_col()
     ggplotly(p10)
 ```
 
 ### Plot 11
-Visualising maximum minimum deficits over 5 years excluding GFC (I haven't figured out a way to keep the year information yet)
 
-The rolling minimum was calculated *excluding* the GFC years
 ```{r}
-    p11 <- max_min_5_no_GFC_2 %>%
-    ggplot(aes(LOCATION,max_5_GFC_2)) + 
+    p11 <- max_5ya %>%
+    ggplot(aes(LOCATION,bal_05ya,group=TIME)) + 
     geom_col()
     ggplotly(p11)
 ```
+
+
+Exporting data to CSV
+
+```{r}
+write_csv(df_deficit_pct,"data_output/deficit_dataset_complete.csv")
+write_csv(df_deficit_no_GFC,"data_output/deficit_dataset_noGFC.csv")
+write_csv(max_min_5_no_GFC,"data_output/max_min_deficit_table.csv")
+write_csv(max_5ymin,"data_output/max_5ymin_table.csv")
+write_csv(max_5ya,"data_output/max_5ya_table.csv")
+```
+
