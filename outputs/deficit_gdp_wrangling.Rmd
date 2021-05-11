@@ -1,0 +1,266 @@
+---
+title: "Data wrangling - Deficit as % of GDP"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library (tidyverse)
+library (plotly)
+library(zoo) # moving averages 
+```
+
+## Preparing data
+
+Uploading data 
+```{r reading, message=FALSE}
+df_deficit_pct <- read_csv("data/deficit_pct_gdp_OECD.csv")
+```
+Creating a wide-form dataset with columns for each year
+There are 23 rows with flag E (estimate/preliminary data) and 1 B (break in series) that were put in table df_e_or_b
+```{r}
+df_deficit_pct %>% count(`Flag Codes`)
+```
+
+```{r}
+df_deficit_pct %>% filter(!is.na(`Flag Codes`))
+df_wide_deficit <- df_deficit_pct %>% 
+  select(-`Flag Codes`) %>% #this removes the variable Flag Codes to make the wide dataset cleaner
+  pivot_wider(names_from = TIME, values_from = deficit_pc)
+```
+Creating a comparators variable
+```{r} 
+comparators <- c("DNK","IRL","NZL","NOR","SWE")
+    df_deficit_pct <- df_deficit_pct %>%
+    mutate(in_comparators=if_else(LOCATION%in%comparators,TRUE,FALSE)) 
+```
+
+Renaming deficit_pc to balance of payments
+```{r} 
+    df_deficit_pct <- df_deficit_pct %>%
+    mutate(balance_pc = deficit_pc) 
+```
+
+Transforming deficit_pc (currently a measure of balance of payments where positive values mean surpluses) into a measure of deficit (higher values mean higher deficits)
+```{r} 
+    df_deficit_pct <- df_deficit_pct %>%
+    mutate(deficit_pc = -deficit_pc) 
+```
+Creating rolling averages over 5, 7 and 10 years
+*These variable names will be changed as now they are no longer rolling averages of the balance but of actual deficit*
+```{r}
+  df_deficit_pct <- df_deficit_pct %>% #this function uses longform
+  group_by(LOCATION) %>% 
+  mutate(bal_05ya = rollmean(deficit_pc, k = 5, fill = NA),
+         bal_07ya = rollmean(deficit_pc, k = 7, fill = NA),
+         bal_10ya = rollmean(deficit_pc, k = 10, fill = NA)) %>% 
+        ungroup() #this closes that group_by(LOCATION)
+```
+
+**Creating different measures of rolling minimum deficits**
+
+Creating rolling minimums over 3 and 5 years
+This is the minimum deficit in rolling 5 year periods including GFC
+```{r}
+df_deficit_pct <- df_deficit_pct %>% #this function uses longform
+  group_by(LOCATION) %>% 
+  mutate(min_05y = rollapply(deficit_pc,5,min, fill=NA, align = "right"),
+         min_03y = rollapply(deficit_pc,3,min, fill=NA, align = "right")
+         ) %>% 
+  ungroup ()
+```
+
+```{r}
+df_deficit_no_GFC <- df_deficit_pct %>%
+  filter(!(TIME%in%c(2009,2010,2011,2012,2013)))
+```
+
+Creating rolling minimums over 3 and 5 years
+This is the minimum deficit in rolling 5 year periods excluding GFC
+```{r}
+df_deficit_no_GFC <- df_deficit_no_GFC %>%
+  group_by(LOCATION) %>% 
+  mutate(min_05y_no_GFC = rollapply(deficit_pc,5,min, fill=NA, align = "right"),
+         min_03y_no_GFC = rollapply(deficit_pc,3,min, fill=NA, align = "right")
+         ) %>% 
+  ungroup ()
+```
+
+*Convoluted attempt at creating maximum values*
+
+Creating maximum values of 5-rolling minimum deficits
+```{r}
+max_min_5 <- df_deficit_pct %>% 
+  group_by(LOCATION) %>% 
+  summarise(max_5 = max(min_05y, na.rm=TRUE))
+```
+
+*Convoluted attempt at creating maximum values*
+
+Creating maximum values of 5-rolling minimums without GFC years
+```{r}
+max_min_5_no_GFC <- df_deficit_no_GFC %>% 
+  group_by(LOCATION) %>%
+  summarise(max_5_GFC = max(min_05y_no_GFC, na.rm=TRUE))
+```
+
+Creating maximum values of 5-rolling minimums without GFC years and keeping the information of all the other variables
+```{r}
+max_5ymin <- df_deficit_no_GFC %>% 
+  group_by(LOCATION) %>% 
+  arrange(desc(min_05y_no_GFC)) %>% 
+  slice(1) %>% 
+  ungroup()
+```
+
+Creating maximum values of 5-rolling average without GFC years
+```{r}
+max_5ya <- df_deficit_no_GFC %>% 
+  group_by(LOCATION) %>% 
+  arrange(desc(bal_05ya)) %>% 
+  slice(1) %>% 
+  ungroup()
+```
+
+## Exploring data
+
+*deficit_pc and its rolling average recodings: Positive values mean budget deficits and negative values mean budget surpluses*
+
+### Plot 1
+Visualising balance as % of GDP for all countries over the years (positive values are surpluses, negative values are deficits)
+```{r}
+  p1 <- df_deficit_pct %>% #making p into a ggplot object to visualise w/ plotly
+ # line below would invert surplus/deficit in deficit_pc, making higher values mean higher deficits
+ # mutate(deficit_pc=-deficit_pc) %>% 
+  ggplot(aes(TIME, deficit_pc, colour=LOCATION)) + 
+  geom_line()
+  ggplotly(p1) #plotly lets me see the legend when scrolling through the plot
+```
+
+### Plot 2
+Visualising 5 year rolling averages of deficit as % of GDP for all countries 
+```{r} 
+    p2 <- df_deficit_pct %>%
+    ggplot(aes(TIME, bal_05ya, colour=LOCATION)) + 
+    geom_line()
+    ggplotly(p2)
+```
+
+### Plot 3
+Visualising 7 year rolling averages of deficit as % of GDP for all countries
+```{r}
+    p3 <- df_deficit_pct %>%
+    ggplot(aes(TIME, bal_07ya, colour=LOCATION)) + 
+    geom_line()
+    ggplotly(p3)
+```
+
+### Plot 4
+Visualising 10 year rolling averages of deficit as % of GDP for all countries
+```{r} 
+    p4 <- df_deficit_pct %>%
+    ggplot(aes(TIME, bal_10ya, colour=LOCATION)) + 
+    geom_line()
+    ggplotly(p4) 
+```
+
+
+### Plot 5
+Visualising 7 year rolling averages of deficit as % of GDP for all countries from 2000
+```{r}
+    p5 <- df_deficit_pct %>%
+    filter(TIME>=2000) %>% 
+    ggplot(aes(TIME, bal_07ya, colour=LOCATION)) + 
+    geom_line()
+    ggplotly(p5)
+```
+
+
+### Plot 6
+Visualising 7 year rolling averages of deficit % of GDP for all countries 
+*higher values mean higher deficits*
+```{r}
+    p6 <- df_deficit_pct %>%
+    ggplot(aes(TIME, bal_07ya, colour=LOCATION)) + 
+    geom_line()
+    ggplotly(p6)
+```
+
+
+###Plot 7
+Visualising 7 year rolling averages of deficit % of GDP for all countries with highlighted comparators
+*higher values mean higher deficits*
+```{r}
+    p7 <- df_deficit_pct %>%
+    ggplot(aes(TIME, bal_07ya, colour=in_comparators, group=LOCATION)) + 
+    geom_line()
+    ggplotly(p7)
+```
+
+
+### Plot 8
+Visualising surpluses as % of GDP for all countries with highlighted comparators
+*higher values mean higher surpluses*
+```{r}
+    p8 <- df_deficit_pct %>%
+    ggplot(aes(TIME, balance_pc, colour=in_comparators, group=LOCATION)) + 
+    geom_line()
+    ggplotly(p8)
+```
+
+## Thoughts (04/05/2021)
+
+* Using the whole timeline gives us Finland during its economic crisis which might be interesting for the point that countries borrow more during crises
+* The shorter timeline (starting at around 2000) would be more parsimonious
+* We can choose between 5, 7 or 10 rolling averages. I think 7 might be the fairer picture. 
+* Rolling averages make us lose data points for the more recent years where it can't be calculated like that. It would be good to think about whether that's a tradeoff that we're happy with. 
+* General story seems to be that no one has run the kind of deficit that Scotland might be looking at consistently and particularly not outside of crisis periods. 
+* Interesting that Norway is the country Scotland is most often compared with and it's a total outlier in terms of running surpluses.
+* Ireland, another potential comparison, is on the other end of that. 
+* This group of comparators I chose ("DNK","IRL","NZL","NOR","SWE") might not be the best one, I picked them because they're some of the comparators that come up more often. Might make more sense to stick to the countries that the Sustainable Growth Commission uses as their case studies. 
+* I think the best way to visualise this in the actual paper would probably be this kind of chart (obviously with very different formatting and less crowded) or if we want to just stick to the comparators we could do are bar charts (the ones that have the change graph at their tip)
+
+## Further analysis suggested by Tom (05/05/2021)
+
+### Plot 9
+Visualising maximum minimum deficits over 5 years *including GFC years* (haven't figured out a way to keep the year information)
+
+The highest minimum deficit including the financial crisis was Greece (9%)
+```{r}
+    p9 <- max_min_5 %>%
+    ggplot(aes(LOCATION,max_5)) + 
+    geom_col()
+    ggplotly(p9)
+```
+
+### Plot 10
+Visualising maximum minimum deficits over 5 years *excluding GFC years*
+
+The rolling minimum was calculated *excluding* the GFC years
+```{r}
+    p10 <- max_5ymin %>%
+    ggplot(aes(LOCATION,min_05y_no_GFC,group=TIME)) + 
+    geom_col()
+    ggplotly(p10)
+```
+
+### Plot 11
+
+```{r}
+    p11 <- max_5ya %>%
+    ggplot(aes(LOCATION,bal_05ya,group=TIME)) + 
+    geom_col()
+    ggplotly(p11)
+```
+
+
+Exporting data to CSV
+
+```{r}
+write_csv(df_deficit_pct,"data_output/deficit_dataset_complete.csv")
+write_csv(df_deficit_no_GFC,"data_output/deficit_dataset_noGFC.csv")
+write_csv(max_min_5_no_GFC,"data_output/max_min_deficit_table.csv")
+write_csv(max_5ymin,"data_output/max_5ymin_table.csv")
+write_csv(max_5ya,"data_output/max_5ya_table.csv")
+```
+

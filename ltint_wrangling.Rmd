@@ -101,6 +101,12 @@ Creating a eurozone countries variable
 eurozone <- c("AUT","BEL","CYP","EST","FIN","FRA","DEU","GRC","IRL","ITA","LVA","LTU","LUX","MLT","NLD","PRT","SVK","SVN","ESP")
 ```
 
+Creating a eurozone & UKcountries variable
+```{r}
+eurozone_uk <- c("AUT","BEL","CYP","EST","FIN","FRA","DEU","GRC","IRL","ITA","LVA","LTU","LUX","MLT","NLD","PRT","SVK","SVN","ESP","GBR")
+```
+
+
 Creating and above-below variable for median of debt-to-gdp in 2013 in eurozone
 ```{r}
 median_debt_euro_2013 <- df_merged_2006_2020 %>% 
@@ -108,24 +114,13 @@ median_debt_euro_2013 <- df_merged_2006_2020 %>%
   pull(debt_gdp) %>% median(na.rm=T)
 ```
 
+Creating and above-below variable for median of debt-to-gdp in 2019 in eurozone
 ```{r}
-df_merged_2006_2020 <- df_merged_2006_2020 %>% 
+median_debt_euro_2019 <- df_merged_2006_2020 %>% 
   filter(TIME==2019, LOCATION %in% eurozone) %>% 
-  mutate_ntile(col = debt_gdp, n= 3,
-  new.col = third_debt_euro_2019)
+  pull(debt_gdp) %>% median(na.rm=T)
 ```
-mutate_ntile(
-  DT,
-  col,
-  n,
-  weights = NULL,
-  by = NULL,
-  keyby = NULL,
-  new.col = NULL,
-  character.only = FALSE,
-  overwrite = TRUE,
-  check.na = FALSE
-)
+
 
 Creating a comparators variable for those with similar debt-to-gdp ratios
 ```{r}
@@ -265,19 +260,49 @@ ggplotly(p8)
 
 ### Plot 9
 
-Visualising relationship between debt-to-GDP ratio and long term interest rates with size of bubbles representing GDP (not logged)
+2019: relationship between debt-to-GDP ratio and long term interest rates with size of bubbles representing GDP (not logged)
+
 ```{r}
 p9 <- df_merged_2006_2020 %>% 
-    filter(TIME==2019, LOCATION %in% eurozone) %>% 
-    ggplot(aes(x = LTINT, y = debt_gdp, size = GDP_MLN_USD, colour=LOCATION)) + 
-    geom_point(alpha=0.7)
+    filter(TIME==2019, LOCATION %in% eurozone_uk) %>% 
+    ggplot(aes(x = debt_gdp, y = LTINT, size = GDP_MLN_USD, colour=LOCATION)) + 
+    geom_point(alpha=0.7) + 
+    xlim(0, 201)+ylim(-1, 11)
 ggplotly(p9) 
 ```    
+
+
+### Plot 10
+
+2013: Visualising relationship between debt-to-GDP ratio and long term interest rates with size of bubbles representing GDP (not logged)
+```{r}
+p9 <- df_merged_2006_2020 %>% 
+    filter(TIME==2013, LOCATION %in% eurozone_uk) %>% 
+    ggplot(aes(x = debt_gdp, y = LTINT, size = GDP_MLN_USD, colour=LOCATION)) + 
+    geom_point(alpha=0.7) + 
+    xlim(0, 201)+ylim(-1, 11)
+ggplotly(p9) 
+```       
+
+### Plot 11
+
+2007: Visualising relationship between debt-to-GDP ratio and long term interest rates with size of bubbles representing GDP (not logged)
+```{r}
+p9 <- df_merged_2006_2020 %>% 
+    filter(TIME==2007, LOCATION %in% eurozone_uk) %>% 
+    ggplot(aes(x = debt_gdp, y = LTINT, size = GDP_MLN_USD, colour=LOCATION)) + 
+    geom_point(alpha=0.7) + 
+    xlim(0, 201)+ylim(-1, 11)
+ggplotly(p9) 
+```    
+
+
+## Story 
+
+* Before the crisis spreads were small but interest rates were high (all above 4%). In the aftermath of the country and the time of the 1st referendum (2013), spreads had grown with some countries having much lower interest rates than in 2006 and others much higher ones. In 2019, spreads are smaller than in 2013 but bigger than 2006. Overall interest rates are lower. 
 
 Exporting data to CSV
 
 ```{r}
-write_csv(df_deficit_pct,"data_output/ltint_dataset_complete.csv")
-write_csv(df_deficit_no_GFC,"data_output/deficit_dataset_noGFC.csv")
-write_csv(max_min_5_no_GFC,"data_output/max_min_deficit_table.csv")
+write_csv(df_merged_2006_2020,"data_output/ltint_dataset_2006_2020.csv")
 ```
