@@ -3,6 +3,8 @@ README
 
 ## Documents
 
-[Deficit\_GDP](deficit_gdp_wrangling.html)
+[Deficit - wrangling](deficit_gdp_wrangling.html)
 
-[Ltint\_GDP](ltint_wrangling.html)
+[Interest rates - wrangling](ltint_wrangling.html)
+
+[Deficit - clean analysis](deficit_clean.html)

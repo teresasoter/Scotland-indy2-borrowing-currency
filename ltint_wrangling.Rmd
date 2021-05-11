@@ -7,6 +7,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 library (tidyverse)
 library (plotly)
+library(fastmatch)
 ```
 
 ## Data cleaning
@@ -100,13 +101,31 @@ Creating a eurozone countries variable
 eurozone <- c("AUT","BEL","CYP","EST","FIN","FRA","DEU","GRC","IRL","ITA","LVA","LTU","LUX","MLT","NLD","PRT","SVK","SVN","ESP")
 ```
 
-Creating and above-below variable for median of debt-to-gdp in 2013
+Creating and above-below variable for median of debt-to-gdp in 2013 in eurozone
 ```{r}
-median_debt_euro_2019 <- df_merged_2006_2020 %>% 
+median_debt_euro_2013 <- df_merged_2006_2020 %>% 
   filter(TIME==2013, LOCATION %in% eurozone) %>% 
   pull(debt_gdp) %>% median(na.rm=T)
-
 ```
+
+```{r}
+df_merged_2006_2020 <- df_merged_2006_2020 %>% 
+  filter(TIME==2019, LOCATION %in% eurozone) %>% 
+  mutate_ntile(col = debt_gdp, n= 3,
+  new.col = third_debt_euro_2019)
+```
+mutate_ntile(
+  DT,
+  col,
+  n,
+  weights = NULL,
+  by = NULL,
+  keyby = NULL,
+  new.col = NULL,
+  character.only = FALSE,
+  overwrite = TRUE,
+  check.na = FALSE
+)
 
 Creating a comparators variable for those with similar debt-to-gdp ratios
 ```{r}
@@ -125,8 +144,6 @@ Colour of the dot corresponds to whether the country is above or below the media
 median_debt_2019 <- df_merged_2006_2020 %>% 
   filter(TIME==2019, LOCATION!="EU27_2020", LOCATION!="OECDE", LOCATION!="EA19") %>% 
   pull(debt_gdp) %>% median(na.rm=T)
-
-
 ```    
 
 ```{r}
@@ -256,3 +273,11 @@ p9 <- df_merged_2006_2020 %>%
     geom_point(alpha=0.7)
 ggplotly(p9) 
 ```    
+
+Exporting data to CSV
+
+```{r}
+write_csv(df_deficit_pct,"data_output/ltint_dataset_complete.csv")
+write_csv(df_deficit_no_GFC,"data_output/deficit_dataset_noGFC.csv")
+write_csv(max_min_5_no_GFC,"data_output/max_min_deficit_table.csv")
+```
