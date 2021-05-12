@@ -131,6 +131,7 @@ max_5ya_all <- df_deficit_1995on %>%
   ungroup()
 ```
 
+
 ## Exploring data
 
 *deficit_pc and its rolling average recodings: Positive values mean budget deficits and negative values mean budget surpluses*
@@ -211,5 +212,10 @@ Maximum 5-year averages excluding GFC
 Exporting data to CSV
 
 ```{r}
-
+write_csv(df_deficit_1995on,"deficit_1995on_data.csv")
+write_csv(df_deficit_no_GFC,"deficit_noGFC_data.csv")
+write_csv(max_5ya_all,"max_5ya_total_table.csv")
+write_csv(max_5ya_no_GFC,"max_5ya_noGFC_table.csv")
+write_csv(max_5ymin,"max_5ymin_total_table.csv")
+write_csv(max_5ymin_no_GFC,"max_5ymin_noGFC_table.csv")
 ```

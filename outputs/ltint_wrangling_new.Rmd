@@ -8,6 +8,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library (tidyverse)
 library (plotly)
 library(fastmatch)
+library(kableExtra)
 ```
 
 ## Data cleaning
@@ -46,10 +47,10 @@ df_debt_ratio <- read_csv("data/debt_gdp_ratio_oecd.csv")
 
 ```
 
-
 ```{r}
 df_debt_ratio <- df_debt_ratio %>% rename(debt_gdp = Value)
 ```
+
 
 ```{r}
 df_debt_wide <- df_debt_ratio %>% 
@@ -58,6 +59,7 @@ df_debt_wide <- df_debt_ratio %>%
   select(-INDICATOR)
 df_debt_wide
 ```
+
 Merging dataframes (long term interest rates, debt-to-gdp ratio and gdp)
 ```{r}
 df_merged <- df_gdp_wide %>% 
@@ -106,7 +108,6 @@ Creating a eurozone & UKcountries variable
 eurozone_uk <- c("AUT","BEL","CYP","EST","FIN","FRA","DEU","GRC","IRL","ITA","LVA","LTU","LUX","MLT","NLD","PRT","SVK","SVN","ESP","GBR")
 ```
 
-
 Creating and above-below variable for median of debt-to-gdp in 2013 in eurozone
 ```{r}
 median_debt_euro_2013 <- df_merged_2006_2020 %>% 
@@ -125,6 +126,20 @@ median_debt_euro_2019 <- df_merged_2006_2020 %>%
 Creating a comparators variable for those with similar debt-to-gdp ratios
 ```{r}
 comp_debt_gdp <- c("BEL","FRA","DEU","IRL","LUX","MLT","NLD","SVK","ESP")
+```
+
+Creating a spread to Germany variable
+```{r}
+tab_deu <- df_merged_2006_2020 %>% 
+  filter(LOCATION=="DEU") %>% ## creating a table just for germany
+  select(TIME,LTINT) %>% 
+  rename(LTINT_DEU = LTINT)
+df_merged_2006_2020 <-  df_merged_2006_2020 %>% 
+    group_by(LOCATION) %>% 
+    left_join(tab_deu,by="TIME") %>% 
+    ungroup() %>% 
+    mutate(DEU_spread = LTINT-LTINT_DEU)
+    
 ```
 
 ## Data exploring
@@ -297,6 +312,14 @@ ggplotly(p9)
 ```    
 
 
+### Table 1
+
+```{r}
+tab_spreads_deu <-  df_merged_2006_2020 %>% 
+  filter(TIME%in%c(2007,2013,2019)) %>% 
+  select(LOCATION,TIME,DEU_spread,LTINT) 
+```  
+
 ## Story 
 
 * Before the crisis spreads were small but interest rates were high (all above 4%). In the aftermath of the country and the time of the 1st referendum (2013), spreads had grown with some countries having much lower interest rates than in 2006 and others much higher ones. In 2019, spreads are smaller than in 2013 but bigger than 2006. Overall interest rates are lower. 
@@ -304,5 +327,6 @@ ggplotly(p9)
 Exporting data to CSV
 
 ```{r}
-write_csv(df_merged_2006_2020,"data_output/ltint_dataset_2006_2020.csv")
+write_csv(df_merged_2006_2020,"ltint_dataset_2006_2020.csv")
+write_csv(tab_spreads_deu,"spreads_deu_table.csv")
 ```
